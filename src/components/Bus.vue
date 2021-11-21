@@ -1,5 +1,5 @@
 <template>
-  <div id="infoCard">
+  <div id="infoCard" ref="gesture">
     <h1 class="font-bold text-2xl">民權松江路口</h1>
     <p class="text-sm text-gray-800">台北市中山區</p>
     <div class="absolute right-10 top-4 text-center">
@@ -12,6 +12,7 @@
     </div>
     <hr class="pt-4 mt-4" />
     <h1 class="font-bold text-base pb-3">即將抵達本站公車</h1>
+
     <Carousel :settings="settings" :breakpoints="breakpoints">
       <Slide v-for="slide in 10" :key="slide">
         <div class="carousel__item rounded-2xl">
@@ -33,6 +34,7 @@
 import { defineComponent } from "vue";
 import { Carousel, Slide } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
+import Hammer from "hammerjs";
 
 export default defineComponent({
   name: "Breakpoints",
@@ -41,6 +43,7 @@ export default defineComponent({
     Slide
   },
   data: () => ({
+    hammer: null,
     // carousel settings
     settings: {
       itemsToShow: "1.8",
@@ -114,7 +117,26 @@ export default defineComponent({
         arrival: "台北世貿站"
       }
     ]
-  })
+  }),
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.hammer = new Hammer(this.$refs.gesture);
+      // 需識別事件
+      this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_VERTICAL });
+
+      this.hammer.on("swipeup", (evt) => {
+        console.log(evt.type, evt);
+      });
+      this.hammer.on("swipedown", (evt) => {
+        var card = document.getElementById("infoCard");
+        card.style.display = "none";
+        console.log(evt.type, evt);
+      });
+    }
+  }
 });
 </script>
 
