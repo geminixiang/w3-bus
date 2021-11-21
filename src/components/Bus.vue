@@ -2,12 +2,29 @@
   <div id="infoCard" ref="gesture">
     <h1 class="font-bold text-2xl">民權松江路口</h1>
     <p class="text-sm text-gray-800">台北市中山區</p>
-    <div class="absolute right-10 top-4 text-center">
-      <i class="fas fa-heart text-2xl text-red-500"></i>
+    <div class="absolute right-10 top-6 text-center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M16.5455 4C14.6364 4 12.9545 4.93333 12 6.4C11.0455 4.93333 9.36364 4 7.45455 4C4.45455 4 2 6.4 2 9.33333C2 14.6222 12 20 12 20C12 20 22 14.6667 22 9.33333C22 6.4 19.5455 4 16.5455 4Z"
+          fill="#FF4A55"
+          stroke="#FF4A55"
+        />
+      </svg>
       <p class="text-sm">收藏</p>
     </div>
-    <div class="absolute right-24 top-4 text-center">
-      <i class="fas fa-route text-2xl"></i>
+    <div class="absolute right-24 top-6 text-center">
+      <svg class="text-2xl" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M9.33069 20.3481L1.65187 12.6693C0.782711 11.8002 0.782711 10.1998 1.65187 9.33069L9.33069 1.65187C10.1998 0.782711 11.8002 0.782711 12.6693 1.65187L20.3481 9.33069C21.2173 10.1998 21.2173 11.8002 20.3481 12.6693L12.6693 20.3481C11.8002 21.2173 10.1998 21.2173 9.33069 20.3481Z"
+          fill="#377BFF"
+          stroke="#377BFF"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path d="M7.25 13.5V11C7.25 10.2625 7.7675 9.75 8.5 9.75H14.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M12.252 7.24405L14.7559 9.74801L12.252 12.252" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
       <p class="text-sm">路線</p>
     </div>
     <hr class="pt-4 mt-4" />

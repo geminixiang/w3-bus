@@ -27,6 +27,12 @@ export default {
         iconSize: [23, 23],
         iconAnchor: [13, 24],
         popupAnchor: [-3, -76]
+      }),
+      userIcon: leaflet.icon({
+        iconUrl: require("@/assets/userIcon.svg"),
+        iconSize: [48, 48],
+        iconAnchor: [13, 24],
+        popupAnchor: [-3, -76]
       })
     };
   },
@@ -78,11 +84,15 @@ export default {
       leaflet.control
         .locate({
           position: "bottomright",
-          icon: "fas fa-location",
+          icon: "location",
           drawCircle: false,
           flyTo: true,
           locateOptions: {
             enableHighAccuracy: true
+          },
+          markerClass: leaflet.marker,
+          markerStyle: {
+            icon: this.userIcon
           }
         })
         .addTo(this.mymap)
@@ -162,10 +172,36 @@ export default {
 body.home {
   font-family: "PingFang TC", "Noto Sans TC", sans-serif;
 }
-.leaflet-touch .leaflet-bar a:last-child {
-  border-bottom-left-radius: 999em !important;
-  border-bottom-right-radius: 999em !important;
+.leaflet-control-locate {
+  width: 48px;
+  height: 48px;
+  border-radius: 999em !important;
+  position: absolute;
+  bottom: 340px;
+  right: 30px;
+  margin: 0;
+  border: 2px solid white !important;
+  background-color: #fff;
 }
+
+.leaflet-control-locate:hover {
+  background: rgba(255, 168, 0, 0.6);
+}
+
+.following {
+  background-color: #ffa800;
+}
+
+.leaflet-touch .leaflet-bar a {
+  width: 100%;
+  height: 100%;
+  background: none;
+}
+
+.following {
+  background-color: #ffa800;
+}
+
 .mytooltip {
   background-color: #fff;
   border: 0;
@@ -174,5 +210,14 @@ body.home {
   padding: 4px 8px;
   margin-top: 15px;
   opacity: 1 !important;
+}
+.location {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg' fill='%23333'%3E %3Cpath d='M10 4C9 4 9 5 9 5L9 5.1A5 5 0 0 0 5.1 9L5 9C5 9 4 9 4 10 4 11 5 11 5 11L5.1 11A5 5 0 0 0 9 14.9L9 15C9 15 9 16 10 16 11 16 11 15 11 15L11 14.9A5 5 0 0 0 14.9 11L15 11C15 11 16 11 16 10 16 9 15 9 15 9L14.9 9A5 5 0 0 0 11 5.1L11 5C11 5 11 4 10 4zM10 6.5A3.5 3.5 0 0 1 13.5 10 3.5 3.5 0 0 1 10 13.5 3.5 3.5 0 0 1 6.5 10 3.5 3.5 0 0 1 10 6.5zM10 8.3A1.8 1.8 0 0 0 8.3 10 1.8 1.8 0 0 0 10 11.8 1.8 1.8 0 0 0 11.8 10 1.8 1.8 0 0 0 10 8.3z'/%3E %3C/svg%3E");
 }
 </style>
