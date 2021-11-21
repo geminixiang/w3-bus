@@ -18,7 +18,10 @@ export default {
   components: { Bus },
   data() {
     return {
-      geo: [25.045, 121.536]
+      geo: [25.045, 121.536],
+      mymap: null,
+      gettingLocation: null,
+      busData: null
     };
   },
   mounted() {
@@ -27,11 +30,31 @@ export default {
   beforeCreate: function () {
     document.body.className = "home";
   },
+  created() {
+    //do we support geolocation
+    if (!("geolocation" in navigator)) {
+      // this.errorStr = "Geolocation is not available.";
+      return;
+    }
+
+    this.gettingLocation = true;
+    // get position
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.gettingLocation = false;
+        this.geo = [pos.coords.latitude, pos.coords.longitude];
+        console.log(this.geo);
+        this.getTourismData(this.geo[0], this.geo[1]);
+      },
+      (err) => {
+        this.gettingLocation = false;
+        this.errorStr = err.message;
+      }
+    );
+  },
   methods: {
     init() {
-      let mymap;
-
-      mymap = leaflet.map("map", {
+      this.mymap = leaflet.map("map", {
         center: this.geo,
         zoom: 12,
         zoomControl: false,
@@ -41,10 +64,10 @@ export default {
       leaflet
         .tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=2ebbece2-a602-41ff-96c6-745a4f4b46bb", {
           maxZoom: 20,
-          zoom: 19,
+          zoom: 17,
           attribution: '&copy; <a href="https://2021.thef2e.com/works">我們就是要組隊</a> contributors'
         })
-        .addTo(mymap);
+        .addTo(this.mymap);
 
       leaflet.control
         .locate({
@@ -56,7 +79,7 @@ export default {
             enableHighAccuracy: true
           }
         })
-        .addTo(mymap)
+        .addTo(this.mymap)
         .start();
 
       // mymap.locate({
@@ -79,32 +102,45 @@ export default {
       let HMAC = ShaObj.getHMAC("B64");
       let Authorization = 'hmac username="' + AppID + '", algorithm="hmac-sha1", headers="x-date", signature="' + HMAC + '"';
       return { Authorization: Authorization, "X-Date": GMTString };
+    },
+    getTourismData(latitude, longitude) {
+      console.log(latitude, longitude);
+      if (this.busData) {
+        console.log("已有景點資料");
+        // showTourismData();
+      } else {
+        console.log("取得景點API資料");
+
+        this.axios({
+          method: "get",
+          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/NearBy?$top=30&$spatialFilter=nearby(${latitude},${longitude},1000)&$format=JSON`,
+          headers: this.GetAuthorizationHeader()
+        })
+          .then((response) => {
+            // console.log("景點資料", response);
+            this.busData = response.data;
+            console.log(this.busData[0]);
+            this.setMarker();
+
+            // showTourismData();
+            // setMarker(tourism, "tourism");
+
+            // console.log(tourism);
+            // getAvailableData(longitude, latitude);
+          })
+          .catch((error) => console.log("error", error));
+      }
+      return;
+    },
+    setMarker() {
+      this.busData.forEach((item) => {
+        this.mymap.addLayer(
+          leaflet.marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
+            title: item.StopName.Zh_tw
+          })
+        );
+      });
     }
-    // getTourismData(longitude, latitude) {
-    //   if (tourism.length > 0) {
-    //     console.log("已有景點資料");
-    //     showTourismData();
-    //   } else {
-    //     console.log("取得景點API資料");
-
-    //     axios({
-    //       method: "get",
-    //       url: "https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/Taipei?$top=30&$format=JSON",
-    //       // url: `https://ptx.transportdata.tw/MOTC/v2/Bike/Station/NearBy?$spatialFilter=nearby(${latitude},${longitude},1000)`,
-    //       headers: GetAuthorizationHeader()
-    //     })
-    //       .then((response) => {
-    //         // console.log("景點資料", response);
-    //         tourism = response.data;
-    //         showTourismData();
-    //         setMarker(tourism, "tourism");
-
-    //         // console.log(tourism);
-    //         // getAvailableData(longitude, latitude);
-    //       })
-    //       .catch((error) => console.log("error", error));
-    //   }
-    // }
   }
 };
 </script>
