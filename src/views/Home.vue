@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen max-h-screen">
     <div id="map" class="h-full"></div>
-    <Bus :busData="busData" />
+    <Bus :busData="busData" :choiceItem="choiceItem" />
   </div>
 </template>
 
@@ -18,6 +18,7 @@ export default {
   components: { Bus },
   data() {
     return {
+      choiceItem: "23",
       geo: [25.045, 121.536],
       mymap: null,
       gettingLocation: null,
@@ -43,7 +44,6 @@ export default {
     document.body.className = "home";
   },
   created() {
-    //do we support geolocation
     if (!("geolocation" in navigator)) {
       // this.errorStr = "Geolocation is not available.";
       return;
@@ -129,7 +129,7 @@ export default {
 
         this.axios({
           method: "get",
-          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/NearBy?$top=30&$spatialFilter=nearby(${latitude},${longitude},1000)&$format=JSON`,
+          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/NearBy?$spatialFilter=nearby(${latitude},${longitude},500)&$format=JSON`,
           headers: this.GetAuthorizationHeader()
         })
           .then((response) => {
@@ -149,19 +149,18 @@ export default {
       return;
     },
     setMarker() {
+      // this指向問題
+      var that = this;
       this.busData.forEach((item) => {
-        this.mymap.addLayer(
-          leaflet
-            .marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
-              icon: this.busIcon,
-              title: item.StopName.Zh_tw
-            })
-            .bindTooltip(item.StopName.Zh_tw, {
-              permanent: true,
-              direction: "center",
-              className: "mytooltip"
-            })
-        );
+        leaflet
+          .marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
+            icon: this.busIcon,
+            title: item.StopName.Zh_tw
+          })
+          .addTo(this.mymap)
+          .on("click", function () {
+            that.choiceItem = item;
+          });
       });
     }
   }
@@ -171,6 +170,8 @@ export default {
 <style>
 body.home {
   font-family: "PingFang TC", "Noto Sans TC", sans-serif;
+  max-height: 100vh;
+  overflow: hidden;
 }
 .leaflet-control-locate {
   width: 48px;
