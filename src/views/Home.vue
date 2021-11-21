@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen max-h-screen">
     <div id="map" class="h-full"></div>
-    <Bus />
+    <Bus :busData="busData" />
   </div>
 </template>
 
@@ -21,7 +21,13 @@ export default {
       geo: [25.045, 121.536],
       mymap: null,
       gettingLocation: null,
-      busData: null
+      busData: null,
+      busIcon: leaflet.icon({
+        iconUrl: require("@/assets/busIcon.svg"),
+        iconSize: [23, 23],
+        iconAnchor: [13, 24],
+        popupAnchor: [-3, -76]
+      })
     };
   },
   mounted() {
@@ -135,9 +141,16 @@ export default {
     setMarker() {
       this.busData.forEach((item) => {
         this.mymap.addLayer(
-          leaflet.marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
-            title: item.StopName.Zh_tw
-          })
+          leaflet
+            .marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
+              icon: this.busIcon,
+              title: item.StopName.Zh_tw
+            })
+            .bindTooltip(item.StopName.Zh_tw, {
+              permanent: true,
+              direction: "center",
+              className: "mytooltip"
+            })
         );
       });
     }
@@ -152,5 +165,14 @@ body.home {
 .leaflet-touch .leaflet-bar a:last-child {
   border-bottom-left-radius: 999em !important;
   border-bottom-right-radius: 999em !important;
+}
+.mytooltip {
+  background-color: #fff;
+  border: 0;
+  border-radius: 100px;
+  box-shadow: 4px 2px 10px rgba(0, 0, 0, 0.25) !important;
+  padding: 4px 8px;
+  margin-top: 15px;
+  opacity: 1 !important;
 }
 </style>

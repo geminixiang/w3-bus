@@ -7,7 +7,7 @@
       <p class="text-sm">收藏</p>
     </div>
     <div class="absolute right-24 top-4 text-center">
-      <i class="fas fa-road text-2xl"></i>
+      <i class="fas fa-route text-2xl"></i>
       <p class="text-sm">路線</p>
     </div>
     <hr class="pt-4 mt-4" />
@@ -38,6 +38,9 @@ import Hammer from "hammerjs";
 
 export default defineComponent({
   name: "Breakpoints",
+  props: {
+    busData: Array
+  },
   components: {
     Carousel,
     Slide
@@ -135,6 +138,7 @@ export default defineComponent({
         card.style.display = "none";
         console.log(evt.type, evt);
       });
+      console.log(this.busData);
     }
   }
 });
