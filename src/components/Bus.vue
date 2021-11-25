@@ -52,7 +52,8 @@
           </div>
         </Slide>
       </Carousel>
-      <Route :chooseBusCard="chooseBusCard" />
+      <button @click="ss = !ss" style="z-index: 9999">開關</button>
+      <Route :chooseBusCard="chooseBusCard" :ss="ss" />
     </div>
   </div>
 </template>
@@ -62,9 +63,9 @@ import { defineComponent } from "vue";
 import { Carousel, Slide } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
 import Route from "../components/Route.vue";
+import Myapi from "@/models/Myapi";
 
 import Hammer from "hammerjs";
-import jsSHA from "jssha";
 
 export default defineComponent({
   name: "Bus",
@@ -76,6 +77,7 @@ export default defineComponent({
   },
   data: () => ({
     hammer: null,
+    ss: false,
     timer: "",
     // carousel settings
     settings: {
@@ -96,7 +98,7 @@ export default defineComponent({
       }
     },
     realtime: [],
-    chooseBusCard: "0南"
+    chooseBusCard: "18"
   }),
   created() {
     this.getBusRealTime();
@@ -109,6 +111,8 @@ export default defineComponent({
     busCardhandle(bus) {
       this.chooseBusCard = bus.RouteName.Zh_tw;
       console.log("巴士卡", this.chooseBusCard);
+      this.ss = false;
+      this.ss = true;
     },
     init() {
       this.hammer = new Hammer(this.$refs.gesture);
@@ -120,24 +124,12 @@ export default defineComponent({
         card.style.bottom = "-350px";
       });
     },
-    getAuthorizationHeader() {
-      let AppID = "69121a1d8f714a5faa4f54c512bb459e";
-      let AppKey = "nYALaDjx1Au-PYCnZOnL-InFIZI";
-
-      let GMTString = new Date().toGMTString();
-      let ShaObj = new jsSHA("SHA-1", "TEXT");
-      ShaObj.setHMACKey(AppKey, "TEXT");
-      ShaObj.update("x-date: " + GMTString);
-      let HMAC = ShaObj.getHMAC("B64");
-      let Authorization = 'hmac username="' + AppID + '", algorithm="hmac-sha1", headers="x-date", signature="' + HMAC + '"';
-      return { Authorization: Authorization, "X-Date": GMTString };
-    },
     getBusRealTime() {
       console.log("選擇站點ID", this.choiceItem.StationID);
       this.axios({
         method: "get",
         url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceItem.StationID}?$format=JSON`,
-        headers: this.getAuthorizationHeader()
+        headers: Myapi.getAuthorizationHeader()
       })
         .then((response) => {
           this.realtime = response.data;
@@ -148,20 +140,21 @@ export default defineComponent({
       return;
     },
     getBusDestination() {
-      var that = this;
       this.realtime.forEach((item) => {
         this.axios({
           method: "get",
           // 這邊用filter 確保取得正確路線
           url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/Taipei/${item.RouteName.Zh_tw}?$filter=RouteName%2FZh_tw%20eq%20'${item.RouteName.Zh_tw}'&$format=JSON`,
-          headers: that.getAuthorizationHeader()
+          headers: Myapi.getAuthorizationHeader()
         })
           .then((response) => {
             console.log("取得路線資訊", response.data);
+
+            // response.data[0]['SubRoutes'].forEach((item) => {
+
             if (item.Direction == 1) item["endstop"] = response.data[0].DepartureStopNameZh;
             else if (item.Direction == 0) item["endstop"] = response.data[0].DestinationStopNameZh;
             // StopStatus (Int32, optional): 車輛狀態備註 : [0:'正常',1:'尚未發車',2:'交管不停靠',3:'末班車已過',4:'今日未營運'] ,
-
             if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
             else if (item.StopStatus == 2) item["EstimateTime"] = "交管不停靠";
             else if (item.StopStatus == 3) item["EstimateTime"] = "末班車已過";
@@ -197,7 +190,7 @@ export default defineComponent({
 #infoCard {
   position: absolute;
   bottom: -350px;
-  z-index: 400;
+  z-index: 1001;
   background: #fff;
   box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
   border-radius: 20px 20px 0px 0px;
