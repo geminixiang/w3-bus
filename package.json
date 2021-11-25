@@ -15,6 +15,7 @@
     "core-js": "^3.6.5",
     "express": "^4.17.1",
     "hammerjs": "^2.0.8",
+    "jquery": "^3.6.0",
     "jssha": "^3.2.0",
     "leaflet": "^1.7.1",
     "leaflet.locatecontrol": "^0.74.1",

@@ -4,7 +4,7 @@
       <h1 class="font-bold text-2xl">{{ choiceItem.StopName.Zh_tw || "NULL" }}</h1>
       <p class="text-sm text-gray-800">{{ choiceItem.StopAddress }}</p>
       <div class="absolute right-10 top-6 text-center">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="text-2xl" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M16.5455 4C14.6364 4 12.9545 4.93333 12 6.4C11.0455 4.93333 9.36364 4 7.45455 4C4.45455 4 2 6.4 2 9.33333C2 14.6222 12 20 12 20C12 20 22 14.6667 22 9.33333C22 6.4 19.5455 4 16.5455 4Z"
             fill="#FF4A55"
@@ -32,20 +32,27 @@
       <h1 class="font-bold text-base pb-3">即將抵達本站公車</h1>
 
       <Carousel :settings="settings" :breakpoints="breakpoints">
-        <Slide v-for="bus in realtime" :key="bus">
+        <Slide v-for="bus in realtime" :key="bus" v-on:click="busCardhandle(bus)">
           <div class="carousel__item rounded-2xl" v-if="realtime">
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
-              <span class="font-bold">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
+              <span class="font-bold rr">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
+              <span class="text-right bg-gray-900 text-white p-1">往{{ bus.endstop || "NULL" }}</span>
               <hr class="mt-2" />
-              <p class="mt-4">再過</p>
-              <p class="text-left text-red-500 text-2xl font-bold Sfpro">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
-
-              <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
+              <div v-if="bus.StopStatus == 0">
+                <p class="mt-4">再過</p>
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left text-black text-2xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
+              </div>
+              <div v-if="bus.StopStatus != 0">
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
+              </div>
             </div>
           </div>
         </Slide>
       </Carousel>
+      <Route :chooseBusCard="chooseBusCard" />
     </div>
   </div>
 </template>
@@ -54,32 +61,32 @@
 import { defineComponent } from "vue";
 import { Carousel, Slide } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
+import Route from "../components/Route.vue";
+
 import Hammer from "hammerjs";
 import jsSHA from "jssha";
 
 export default defineComponent({
   name: "Bus",
-  props: ["busData", "choiceItem"],
+  props: ["choiceItem"],
   components: {
     Carousel,
-    Slide
+    Slide,
+    Route
   },
   data: () => ({
     hammer: null,
     timer: "",
     // carousel settings
     settings: {
-      itemsToShow: "1.8",
-      snapAlign: "center",
-      transition: 150,
-      wrapAround: true
+      itemsToShow: 2,
+      snapAlign: "start",
+      transition: 150
     },
-    // breakpoints are mobile first
-    // any settings not specified will fallback to the carousel settings
     breakpoints: {
       // 700px and up
       700: {
-        itemsToShow: 3.2,
+        itemsToShow: 4,
         snapAlign: "center"
       },
       // 1024 and up
@@ -88,7 +95,8 @@ export default defineComponent({
         snapAlign: "center"
       }
     },
-    realtime: []
+    realtime: [],
+    chooseBusCard: "0南"
   }),
   created() {
     this.getBusRealTime();
@@ -98,15 +106,18 @@ export default defineComponent({
     this.init();
   },
   methods: {
+    busCardhandle(bus) {
+      this.chooseBusCard = bus.RouteName.Zh_tw;
+      console.log("巴士卡", this.chooseBusCard);
+    },
     init() {
       this.hammer = new Hammer(this.$refs.gesture);
       // 需識別事件
       this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_VERTICAL });
 
-      this.hammer.on("swipedown", (evt) => {
+      this.hammer.on("swipedown", () => {
         var card = document.getElementById("infoCard");
         card.style.bottom = "-350px";
-        console.log(evt.type, evt);
       });
     },
     getAuthorizationHeader() {
@@ -122,7 +133,7 @@ export default defineComponent({
       return { Authorization: Authorization, "X-Date": GMTString };
     },
     getBusRealTime() {
-      console.log(this.choiceItem.StationID);
+      console.log("選擇站點ID", this.choiceItem.StationID);
       this.axios({
         method: "get",
         url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceItem.StationID}?$format=JSON`,
@@ -130,8 +141,8 @@ export default defineComponent({
       })
         .then((response) => {
           this.realtime = response.data;
-          // console.log(this.realtime);
           this.getBusDestination();
+          console.log("站點預估到達資訊", this.realtime);
         })
         .catch((error) => console.log("error", error));
       return;
@@ -146,7 +157,7 @@ export default defineComponent({
           headers: that.getAuthorizationHeader()
         })
           .then((response) => {
-            // console.log(item.RouteName, item.Direction, response.data);
+            console.log("取得路線資訊", response.data);
             if (item.Direction == 1) item["endstop"] = response.data[0].DepartureStopNameZh;
             else if (item.Direction == 0) item["endstop"] = response.data[0].DestinationStopNameZh;
             // StopStatus (Int32, optional): 車輛狀態備註 : [0:'正常',1:'尚未發車',2:'交管不停靠',3:'末班車已過',4:'今日未營運'] ,
@@ -185,12 +196,12 @@ export default defineComponent({
 }
 #infoCard {
   position: absolute;
-  bottom: 0;
+  bottom: -350px;
   z-index: 400;
   background: #fff;
   box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
   border-radius: 20px 20px 0px 0px;
-  padding: 18px 0px 18px 24px;
+  padding: 18px 24px;
   width: 100vw;
   box-sizing: border-box;
   transition: bottom 0.5s, width 0.5s;
@@ -207,10 +218,6 @@ export default defineComponent({
 .carousel__slide {
   background: #fff;
   height: 156px;
-}
-
-.carousel__slide--visible {
-  transform: rotateY(0);
 }
 
 .Sfpro {

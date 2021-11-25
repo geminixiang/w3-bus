@@ -144,8 +144,8 @@ export default {
           })
           .addTo(this.mymap)
           .on("click", function () {
+            that.choiceItem = "";
             that.choiceItem = item;
-            console.log(that.choiceItem);
           });
       });
     }
