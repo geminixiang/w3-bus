@@ -1,8 +1,8 @@
 <template>
   <div id="infoCard" ref="gesture">
     <div class="info" v-if="choiceItem">
-      <h1 class="font-bold text-2xl">{{ choiceItem.StopName.Zh_tw || "NULL" }}</h1>
-      <p class="text-sm text-gray-800">{{ choiceItem.StopAddress }}</p>
+      <h1 class="font-bold text-2xl title">{{ choiceItem.StopName.Zh_tw || "NULL" }}</h1>
+      <p class="text-base text-gray-800 title">{{ choiceItem.StopAddress }}</p>
       <div class="absolute right-10 top-6 text-center">
         <svg class="text-2xl" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -122,7 +122,7 @@ export default defineComponent({
 
       this.hammer.on("swipedown", () => {
         var card = document.getElementById("infoCard");
-        card.style.bottom = "-350px";
+        card.style.bottom = "-450px";
       });
     },
     getBusRealTime() {
@@ -207,9 +207,13 @@ export default defineComponent({
   font-family: "SF Pro";
   src: url("~@/assets/SF-Pro.ttf");
 }
+.title {
+  width: 70%;
+  height: 32px;
+}
 #infoCard {
   position: absolute;
-  bottom: -350px;
+  bottom: -450px;
   z-index: 1001;
   background: #fff;
   box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
@@ -235,9 +239,5 @@ export default defineComponent({
 
 .Sfpro {
   font-family: "SF Pro", "PinfFang TC";
-}
-
-.title {
-  font-size: 18px;
 }
 </style>

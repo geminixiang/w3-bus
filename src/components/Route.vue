@@ -147,6 +147,7 @@ export default {
   width: 30%;
   text-align: center;
   display: inline-block;
+  font-weight: 600;
 }
 .stopname {
   width: 64%;

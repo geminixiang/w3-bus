@@ -126,7 +126,8 @@ export default {
         leaflet
           .marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
             icon: this.busIcon,
-            title: item.StopName.Zh_tw
+            title: item.StopName.Zh_tw,
+            markerClass: "test"
           })
           .addTo(this.mymap)
           .on("click", function () {
