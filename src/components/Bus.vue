@@ -93,7 +93,7 @@ export default defineComponent({
       },
       // 1024 and up
       1024: {
-        itemsToShow: 6,
+        itemsToShow: 8,
         snapAlign: "center"
       }
     },
