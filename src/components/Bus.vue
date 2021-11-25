@@ -37,16 +37,16 @@
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
               <span class="font-bold title">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
-              <p class="text-left text-gray-800 p-1">往{{ bus.endstop || "NULL" }}</p>
+              <p class="text-left text-gray-800 text-sm p-1">往{{ bus.endstop || "NULL" }}</p>
               <hr class="mt-2" />
               <div v-if="bus.StopStatus == 0">
                 <p class="mt-4">再過</p>
-                <p class="text-left text-red-500 text-xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
-                <p class="text-left text-black text-xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left text-black text-2xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
                 <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
               </div>
               <div v-if="bus.StopStatus != 0">
-                <p class="text-left text-red-500 text-xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
               </div>
             </div>
           </div>
