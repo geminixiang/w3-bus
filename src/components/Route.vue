@@ -89,13 +89,14 @@ export default {
     },
     fixTime(data) {
       data.forEach((item) => {
-        if (item["EstimateTime"] < 3600) {
+        if (item["EstimateTime"] < 3600 && item["EstimateTime"] > 60) {
           let t = Math.floor(item["EstimateTime"] / 60);
           if (t < 10) {
             t = "0" + t.toString();
           }
           item["EstimateTime"] = t + "分";
-        } else if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
+        } else if (item["EstimateTime"] < 60) item["EstimateTime"] = "進站中";
+        else if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
         else if (item.StopStatus == 2) item["EstimateTime"] = "交管不停靠";
         else if (item.StopStatus == 3) item["EstimateTime"] = "末班車已過";
         else if (item.StopStatus == 4) item["EstimateTime"] = "今日未營運";

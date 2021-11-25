@@ -36,17 +36,17 @@
           <div class="carousel__item rounded-2xl" v-if="realtime">
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
-              <span class="font-bold rr">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
-              <span class="text-right bg-gray-900 text-white p-1">往{{ bus.endstop || "NULL" }}</span>
+              <span class="font-bold title">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
+              <p class="text-left text-gray-800 p-1">往{{ bus.endstop || "NULL" }}</p>
               <hr class="mt-2" />
               <div v-if="bus.StopStatus == 0">
                 <p class="mt-4">再過</p>
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
-                <p class="text-left text-black text-2xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left text-red-500 text-xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+                <p class="text-left text-black text-xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
                 <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
               </div>
               <div v-if="bus.StopStatus != 0">
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
+                <p class="text-left text-red-500 text-xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
               </div>
             </div>
           </div>
@@ -106,6 +106,7 @@ export default defineComponent({
   },
   mounted() {
     this.init();
+    this.getallBusName();
   },
   methods: {
     busCardhandle(bus) {
@@ -170,6 +171,25 @@ export default defineComponent({
           })
           .catch((error) => console.log("error", error));
       });
+    },
+    getallBusName() {
+      this.axios({
+        method: "get",
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/City/Taipei?$format=JSON`,
+        headers: Myapi.getAuthorizationHeader()
+      }).then((response) => {
+        let data = response.data;
+        let maxname = 0;
+        let temp = "";
+        data.forEach((item) => {
+          if (item["StopName"]["Zh_tw"].length > maxname) {
+            // console.log("yoooooo", item["StopName"]["Zh_tw"].length);
+            maxname = item["StopName"]["Zh_tw"].length;
+            temp = item["StopName"]["Zh_tw"];
+          }
+        });
+        console.log("最長的名字", maxname, temp);
+      });
     }
   },
   watch: {
@@ -203,17 +223,21 @@ export default defineComponent({
 .carousel__item {
   margin: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  height: 156px;
+  height: 200px;
   width: 100%;
   box-shadow: 0px 0px 11.8048px rgba(0, 0, 0, 0.1);
 }
 
 .carousel__slide {
   background: #fff;
-  height: 156px;
+  height: 200px;
 }
 
 .Sfpro {
   font-family: "SF Pro", "PinfFang TC";
+}
+
+.title {
+  font-size: 18px;
 }
 </style>
