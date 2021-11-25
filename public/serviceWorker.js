@@ -18,3 +18,7 @@ self.addEventListener("fetch", (event) => {
       })
   );
 });
+
+self.addEventListener("error", function (e) {
+  console.log(e.filename, e.lineno, e.colno, e.message);
+});
