@@ -1,6 +1,6 @@
 <template>
   <div id="infoCard" ref="gesture">
-    <div class="info">
+    <div class="info" v-if="choiceItem">
       <h1 class="font-bold text-2xl">{{ choiceItem.StopName.Zh_tw || "NULL" }}</h1>
       <p class="text-sm text-gray-800">{{ choiceItem.StopAddress }}</p>
       <div class="absolute right-10 top-6 text-center">
@@ -32,15 +32,16 @@
       <h1 class="font-bold text-base pb-3">即將抵達本站公車</h1>
 
       <Carousel :settings="settings" :breakpoints="breakpoints">
-        <Slide v-for="slide in 10" :key="slide">
-          <div class="carousel__item rounded-2xl">
+        <Slide v-for="bus in realtime" :key="bus">
+          <div class="carousel__item rounded-2xl" v-if="realtime">
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
-              <span class="font-bold">{{ dataset[slide - 1].name }}</span>
+              <span class="font-bold">{{ bus.RouteName.Zh_tw || "NULL" }}</span>
               <hr class="mt-2" />
               <p class="mt-4">再過</p>
-              <p class="text-left text-red-500 text-3xl font-bold">{{ dataset[slide - 1].time }}</p>
-              <p class="text-left">即抵達{{ dataset[slide - 1].arrival }}</p>
+              <p class="text-left text-red-500 text-2xl font-bold Sfpro">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+
+              <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
             </div>
           </div>
         </Slide>
@@ -54,6 +55,7 @@ import { defineComponent } from "vue";
 import { Carousel, Slide } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
 import Hammer from "hammerjs";
+import jsSHA from "jssha";
 
 export default defineComponent({
   name: "Bus",
@@ -64,10 +66,11 @@ export default defineComponent({
   },
   data: () => ({
     hammer: null,
+    timer: "",
     // carousel settings
     settings: {
       itemsToShow: "1.8",
-      snapAlign: "start",
+      snapAlign: "center",
       transition: 150,
       wrapAround: true
     },
@@ -85,59 +88,12 @@ export default defineComponent({
         snapAlign: "center"
       }
     },
-    dataset: [
-      {
-        name: "松江新生幹線",
-        time: "01分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "02分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "03分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "04分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "05分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "06分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "07分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "08分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "09分鐘",
-        arrival: "台北世貿站"
-      },
-      {
-        name: "松江新生幹線",
-        time: "10分鐘",
-        arrival: "台北世貿站"
-      }
-    ]
+    realtime: []
   }),
+  created() {
+    this.getBusRealTime();
+    this.timer = setInterval(this.getBusRealTime(), 30000);
+  },
   mounted() {
     this.init();
   },
@@ -147,26 +103,86 @@ export default defineComponent({
       // 需識別事件
       this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_VERTICAL });
 
-      this.hammer.on("swipeup", (evt) => {
-        // var card = document.getElementById("infoCard");
-        // card.style.visibility = "visible";
-
-        console.log(evt.type, evt);
-      });
       this.hammer.on("swipedown", (evt) => {
         var card = document.getElementById("infoCard");
         card.style.bottom = "-350px";
-        // card.style.opacity = 0;
-        this.isShow = !this.isShow;
         console.log(evt.type, evt);
       });
-      console.log(this.busData);
+    },
+    getAuthorizationHeader() {
+      let AppID = "69121a1d8f714a5faa4f54c512bb459e";
+      let AppKey = "nYALaDjx1Au-PYCnZOnL-InFIZI";
+
+      let GMTString = new Date().toGMTString();
+      let ShaObj = new jsSHA("SHA-1", "TEXT");
+      ShaObj.setHMACKey(AppKey, "TEXT");
+      ShaObj.update("x-date: " + GMTString);
+      let HMAC = ShaObj.getHMAC("B64");
+      let Authorization = 'hmac username="' + AppID + '", algorithm="hmac-sha1", headers="x-date", signature="' + HMAC + '"';
+      return { Authorization: Authorization, "X-Date": GMTString };
+    },
+    getBusRealTime() {
+      console.log(this.choiceItem.StationID);
+      this.axios({
+        method: "get",
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceItem.StationID}?$format=JSON`,
+        headers: this.getAuthorizationHeader()
+      })
+        .then((response) => {
+          this.realtime = response.data;
+          // console.log(this.realtime);
+          this.getBusDestination();
+        })
+        .catch((error) => console.log("error", error));
+      return;
+    },
+    getBusDestination() {
+      var that = this;
+      this.realtime.forEach((item) => {
+        this.axios({
+          method: "get",
+          // 這邊用filter 確保取得正確路線
+          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Route/City/Taipei/${item.RouteName.Zh_tw}?$filter=RouteName%2FZh_tw%20eq%20'${item.RouteName.Zh_tw}'&$format=JSON`,
+          headers: that.getAuthorizationHeader()
+        })
+          .then((response) => {
+            // console.log(item.RouteName, item.Direction, response.data);
+            if (item.Direction == 1) item["endstop"] = response.data[0].DepartureStopNameZh;
+            else if (item.Direction == 0) item["endstop"] = response.data[0].DestinationStopNameZh;
+            // StopStatus (Int32, optional): 車輛狀態備註 : [0:'正常',1:'尚未發車',2:'交管不停靠',3:'末班車已過',4:'今日未營運'] ,
+
+            if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
+            else if (item.StopStatus == 2) item["EstimateTime"] = "交管不停靠";
+            else if (item.StopStatus == 3) item["EstimateTime"] = "末班車已過";
+            else if (item.StopStatus == 4) item["EstimateTime"] = "今日未營運";
+            else {
+              if (item["EstimateTime"] < 60) return;
+              let t = Math.floor(item["EstimateTime"] / 60);
+              if (t < 10) {
+                t = "0" + t.toString();
+              }
+              item["EstimateTime"] = t;
+            }
+          })
+          .catch((error) => console.log("error", error));
+      });
+    }
+  },
+  watch: {
+    choiceItem: function () {
+      this.getBusRealTime();
+      var card = document.getElementById("infoCard");
+      card.style.bottom = "0px";
     }
   }
 });
 </script>
 
 <style scoped>
+@font-face {
+  font-family: "SF Pro";
+  src: url("~@/assets/SF-Pro.ttf");
+}
 #infoCard {
   position: absolute;
   bottom: 0;
@@ -195,5 +211,9 @@ export default defineComponent({
 
 .carousel__slide--visible {
   transform: rotateY(0);
+}
+
+.Sfpro {
+  font-family: "SF Pro", "PinfFang TC";
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-screen max-h-screen">
     <div id="map" class="h-full"></div>
-    <Bus :busData="busData" :choiceItem="choiceItem" />
+    <Bus :choiceItem="choiceItem" />
   </div>
 </template>
 
@@ -18,7 +18,7 @@ export default {
   components: { Bus },
   data() {
     return {
-      choiceItem: "23",
+      choiceItem: "",
       geo: [25.045, 121.536],
       mymap: null,
       gettingLocation: null,
@@ -45,7 +45,6 @@ export default {
   },
   created() {
     if (!("geolocation" in navigator)) {
-      // this.errorStr = "Geolocation is not available.";
       return;
     }
 
@@ -56,7 +55,7 @@ export default {
         this.gettingLocation = false;
         this.geo = [pos.coords.latitude, pos.coords.longitude];
         console.log(this.geo);
-        this.getTourismData(this.geo[0], this.geo[1]);
+        this.getBusStopData(this.geo[0], this.geo[1]);
       },
       (err) => {
         this.gettingLocation = false;
@@ -97,17 +96,8 @@ export default {
         })
         .addTo(this.mymap)
         .start();
-
-      // mymap.locate({
-      //   setView: true, // 是否讓地圖跟著移動中心點
-      //   watch: true, // 是否要一直監測使用者位置
-      //   maxZoom: 18, // 最大的縮放值
-      //   initialZoomLevel: 17,
-      //   enableHighAccuracy: true, // 是否要高精準度的抓位置
-      //   timeout: 10000 // 觸發locationerror事件之前等待的毫秒數
-      // });
     },
-    GetAuthorizationHeader() {
+    getAuthorizationHeader() {
       let AppID = "69121a1d8f714a5faa4f54c512bb459e";
       let AppKey = "nYALaDjx1Au-PYCnZOnL-InFIZI";
 
@@ -119,30 +109,22 @@ export default {
       let Authorization = 'hmac username="' + AppID + '", algorithm="hmac-sha1", headers="x-date", signature="' + HMAC + '"';
       return { Authorization: Authorization, "X-Date": GMTString };
     },
-    getTourismData(latitude, longitude) {
+    getBusStopData(latitude, longitude) {
       console.log(latitude, longitude);
       if (this.busData) {
-        console.log("已有景點資料");
+        console.log("已有站牌資料");
         // showTourismData();
       } else {
-        console.log("取得景點API資料");
+        console.log("取得站牌API資料");
 
         this.axios({
           method: "get",
-          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/NearBy?$spatialFilter=nearby(${latitude},${longitude},500)&$format=JSON`,
-          headers: this.GetAuthorizationHeader()
+          url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/NearBy?$spatialFilter=nearby(${latitude},${longitude},800)&$format=JSON`,
+          headers: this.getAuthorizationHeader()
         })
           .then((response) => {
-            // console.log("景點資料", response);
             this.busData = response.data;
-            console.log(this.busData[0]);
             this.setMarker();
-
-            // showTourismData();
-            // setMarker(tourism, "tourism");
-
-            // console.log(tourism);
-            // getAvailableData(longitude, latitude);
           })
           .catch((error) => console.log("error", error));
       }
@@ -151,6 +133,9 @@ export default {
     setMarker() {
       // this指向問題
       var that = this;
+      this.choiceItem = this.busData[0];
+      console.log(this.choiceItem);
+
       this.busData.forEach((item) => {
         leaflet
           .marker([item.StopPosition.PositionLat, item.StopPosition.PositionLon], {
@@ -160,6 +145,7 @@ export default {
           .addTo(this.mymap)
           .on("click", function () {
             that.choiceItem = item;
+            console.log(that.choiceItem);
           });
       });
     }
