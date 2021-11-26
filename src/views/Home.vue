@@ -52,7 +52,6 @@ export default {
       (pos) => {
         this.gettingLocation = false;
         this.geo = [pos.coords.latitude, pos.coords.longitude];
-        console.log(this.geo);
         this.getBusStopData(this.geo[0], this.geo[1]);
       },
       (err) => {
@@ -71,11 +70,15 @@ export default {
       });
 
       leaflet
-        .tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=2ebbece2-a602-41ff-96c6-745a4f4b46bb", {
-          maxZoom: 20,
-          zoom: 17,
-          attribution: '&copy; <a href="https://2021.thef2e.com/works">我們就是要組隊</a> contributors'
-        })
+        .tileLayer(
+          "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=2ebbece2-a602-41ff-96c6-745a4f4b46bb",
+          {
+            maxZoom: 20,
+            zoom: 17,
+            attribution:
+              '&copy; <a href="https://2021.thef2e.com/works">我們就是要組隊</a> contributors'
+          }
+        )
         .addTo(this.mymap);
 
       leaflet.control
@@ -96,7 +99,6 @@ export default {
         .start();
     },
     getBusStopData(latitude, longitude) {
-      console.log(latitude, longitude);
       if (this.busData) {
         console.log("已有站牌資料");
         // showTourismData();
@@ -119,8 +121,6 @@ export default {
     setMarker() {
       // this指向問題
       var that = this;
-      this.choiceItem = this.busData[0];
-      console.log(this.choiceItem);
 
       this.busData.forEach((item) => {
         leaflet

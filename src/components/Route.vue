@@ -1,25 +1,54 @@
 <template>
-  <div id="router">
-    <div class="row">
-      <div id="BusData" class="list-group padding" v-if="goEstimatedTime">
-        <div class="busroute" v-for="ett in goEstimatedTime" :key="ett">
-          <p class="time" v-if="ett.EstimateTime">{{ ett.EstimateTime }}</p>
-          <p class="time" v-else>尚未發車</p>
-          <p class="stopname">{{ ett.StopName.Zh_tw }}</p>
-        </div>
+  <div id="router" ref="routerCard">
+    <div>
+      <nav class="navbar">
+        <p class="navbar-brand" href="#">{{ chooseBusCard }}</p>
+        <p class="navbar-update"><img src="@/assets/update.svg" />更新</p>
+      </nav>
+
+      <div class="tab" v-if="goEstimatedTime[0]">
+        <button class="tablink goTab activate" v-on:click="changeTab('goTab', 'go')">
+          往{{ goEstimatedTime[goEstimatedTime.length - 1].StopName.Zh_tw }}
+        </button>
+        <button class="tablink backTab" v-on:click="changeTab('backTab', 'back')">
+          往{{ backEstimatedTime[backEstimatedTime.length - 1].StopName.Zh_tw }}
+        </button>
       </div>
-      <div class="line"></div>
+
+      <div class="row" id="go">
+        <div class="BusData">
+          <div class="busroute" v-for="ett in goEstimatedTime" :key="ett">
+            <p class="time" v-if="ett.EstimateTime">{{ ett.EstimateTime }}</p>
+            <p class="time" v-else>尚未發車</p>
+            <p class="stopname">{{ ett.StopName.Zh_tw }}</p>
+          </div>
+        </div>
+        <div class="line"></div>
+      </div>
+
+      <div class="row" id="back" style="display: none">
+        <div class="BusData" v-if="backEstimatedTime">
+          <div class="busroute" v-for="ett in backEstimatedTime" :key="ett">
+            <p class="time" v-if="ett.EstimateTime">{{ ett.EstimateTime }}</p>
+            <p class="time" v-else>尚未發車</p>
+            <p class="stopname">{{ ett.StopName.Zh_tw }}</p>
+          </div>
+        </div>
+        <div class="line"></div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import Myapi from "@/models/Myapi";
+import Hammer from "hammerjs";
 
 export default {
   props: ["chooseBusCard", "ss"],
   data() {
     return {
+      hammer: null,
       goEstimatedTime: [],
       backEstimatedTime: [],
       stopSequence: [],
@@ -27,31 +56,22 @@ export default {
     };
   },
   mounted() {
+    this.init();
     this.getStopSequence();
-    this.axios({
-      method: "get",
-      url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/${this.chooseBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.chooseBusCard}'&$format=JSON`,
-      headers: Myapi.getAuthorizationHeader()
-    })
-      .then((response) => {
-        // console.log("站點預估到達資訊", response.data);
-        this.goEstimatedTime = [];
-        response.data.forEach((item) => {
-          if (item.Direction == 0) {
-            this.goEstimatedTime.push(item);
-          } else {
-            this.backEstimatedTime.push(item);
-          }
-        });
-        // this.estimatedTime.sort(this.sortJSONData("StopID"));
-
-        this.goEstimatedTime = this.fixTime(this.goEstimatedTime);
-        this.sortJSONData(this.goEstimatedTime, 0);
-        // console.log("路線圖", this.goEstimatedTime);
-      })
-      .catch((error) => console.log("error", error));
+    this.getEstimatedTimeOfArrival();
   },
   methods: {
+    init() {
+      this.hammer = new Hammer(this.$refs.routerCard);
+
+      this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_HORIZONTAL });
+
+      this.hammer.on("swiperight", () => {
+        var card = document.getElementById("router");
+        card.style.display = "none";
+        this.$emit("update", false);
+      });
+    },
     getStopSequence() {
       this.axios({
         method: "get",
@@ -60,7 +80,6 @@ export default {
       })
         .then((response) => {
           this.stopSequence = [];
-          // console.log("所有停靠站", response.data);
 
           response.data.forEach((item) => {
             let stopUID = [],
@@ -76,10 +95,33 @@ export default {
         })
         .catch((error) => console.log("error", error));
     },
+    getEstimatedTimeOfArrival() {
+      this.axios({
+        method: "get",
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/${this.chooseBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.chooseBusCard}'&$format=JSON`,
+        headers: Myapi.getAuthorizationHeader()
+      })
+        .then((response) => {
+          this.goEstimatedTime = [];
+          response.data.forEach((item) => {
+            if (item.Direction == 0) {
+              this.goEstimatedTime.push(item);
+            } else {
+              this.backEstimatedTime.push(item);
+            }
+          });
+          // this.estimatedTime.sort(this.sortJSONData("StopID"));
+
+          this.goEstimatedTime = this.fixTime(this.goEstimatedTime);
+          this.sortJSONData(this.goEstimatedTime, 0);
+          this.backEstimatedTime = this.fixTime(this.backEstimatedTime);
+          this.sortJSONData(this.backEstimatedTime, 0);
+        })
+        .catch((error) => console.log("error", error));
+    },
     sortJSONData(prop, i) {
       let x, y;
       var that = this;
-      // console.log("車站排序", that.stopSequence[i]);
 
       return prop.sort(function (a, b) {
         x = that.stopSequence[i][0].indexOf(a["StopUID"]);
@@ -101,20 +143,33 @@ export default {
         else if (item.StopStatus == 3) item["EstimateTime"] = "末班車已過";
         else if (item.StopStatus == 4) item["EstimateTime"] = "今日未營運";
       });
-      console.log("校正時間", data);
       return data;
+    },
+    changeTab(clicked, cityName) {
+      var i, x, tablinks;
+      x = document.getElementsByClassName("row");
+      for (i = 0; i < x.length; i++) {
+        x[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablink");
+      for (i = 0; i < x.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" activate", "");
+      }
+      document.getElementById(cityName).style.display = "block";
+
+      document.getElementsByClassName(clicked)[0].className += " activate";
     }
   },
   watch: {
     ss: function () {
-      console.log("我是SS");
       var card = document.getElementById("router");
-      if (this.ss) {
-        card.style.display = "none";
-      } else {
+      if (this.ss == true) {
+        this.getStopSequence();
+        this.getEstimatedTimeOfArrival();
         card.style.display = "block";
+      } else {
+        card.style.display = "none";
       }
-      console.log(this.ss);
     }
   }
 };
@@ -125,13 +180,25 @@ export default {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
   z-index: 1001; /* Sit on top */
-  padding-top: 100px; /* Location of the box */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
   height: 100%; /* Full height */
   overflow: auto; /* Enable scroll if needed */
   background-color: rgba(255, 255, 255, 1); /* Black w/ opacity */
+}
+/* hide scroll bar */
+#router::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+#router {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.row {
+  padding-top: 35px;
 }
 .busroute {
   width: 100%;
@@ -140,7 +207,13 @@ export default {
   line-height: 54px;
   font-size: 20px;
   border-bottom: 1px solid;
-  border-image: linear-gradient(to right, rgba(156, 156, 156, 0.2) 0%, rgba(90, 90, 90, 0.2) 10%, rgba(90, 90, 90, 0.2) 80%, rgba(255, 255, 255, 0) 90%);
+  border-image: linear-gradient(
+    to right,
+    rgba(156, 156, 156, 0.2) 0%,
+    rgba(90, 90, 90, 0.2) 10%,
+    rgba(90, 90, 90, 0.2) 80%,
+    rgba(255, 255, 255, 0) 90%
+  );
   border-image-slice: 1;
 }
 .time {
@@ -154,18 +227,77 @@ export default {
   display: inline-block;
 }
 
-#BusData {
+.BusData {
   width: 90%;
   max-width: 500px;
-  border-right: 1px solid rgba(0, 0, 0, 0.6);
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .busroute:after {
   content: "";
-  background: #ffa800;
+  /* background: #ffa800; */
+  background: #d9d5cc;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   display: inline-block;
+}
+
+/* navbar */
+.navbar {
+  box-shadow: 0px 0px 14px 4px rgb(0 0 0 / 10%);
+  height: 80px;
+  line-height: 80px;
+  padding: 0 35px;
+  max-width: 500px;
+}
+.navbar-brand {
+  font-size: 35px;
+  font-weight: 700;
+  width: 80%;
+  display: inline-block;
+}
+.navbar-update,
+.navbar-update img {
+  margin-right: 5px;
+  display: inline-block;
+  font-size: 18px;
+}
+
+/* bar */
+.tab {
+  width: 100vw;
+  max-width: 500px;
+}
+.tab button {
+  width: 50%;
+  height: 50px;
+  line-height: 50px;
+  font-size: 18px;
+  border-radius: 100px;
+}
+.tab button:hover {
+  background: #fff8ec;
+}
+
+.tab button.activate {
+  border-bottom: 4px solid #ffa800;
+  border-radius: 100px;
+  transition: transform 500ms ease-out;
+}
+
+@media screen and (min-width: 1200px) {
+  #router {
+    position: absolute;
+    top: 0px;
+    z-index: 1001;
+    background: #fff;
+    box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    width: 500px;
+    margin: 0;
+    box-sizing: border-box;
+    transition: bottom 0.5s, width 0.5s;
+  }
 }
 </style>

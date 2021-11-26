@@ -23,8 +23,20 @@
             stroke-linecap="round"
             stroke-linejoin="round"
           />
-          <path d="M7.25 13.5V11C7.25 10.2625 7.7675 9.75 8.5 9.75H14.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12.252 7.24405L14.7559 9.74801L12.252 12.252" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M7.25 13.5V11C7.25 10.2625 7.7675 9.75 8.5 9.75H14.75"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12.252 7.24405L14.7559 9.74801L12.252 12.252"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         <p class="text-sm">路線</p>
       </div>
@@ -32,7 +44,7 @@
       <h1 class="font-bold text-base pb-3">即將抵達本站公車</h1>
 
       <Carousel :settings="settings" :breakpoints="breakpoints">
-        <Slide v-for="bus in realtime" :key="bus" v-on:click="busCardhandle(bus)">
+        <Slide v-for="bus in realtime" :key="bus" v-on:dblclick="busCardhandle(bus)">
           <div class="carousel__item rounded-2xl" v-if="realtime">
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
@@ -41,19 +53,30 @@
               <hr class="mt-2" />
               <div v-if="bus.StopStatus == 0">
                 <p class="mt-4">再過</p>
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-if="bus.EstimateTime < 10">{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
-                <p class="text-left text-black text-2xl font-bold Sfpro" v-else>{{ bus.EstimateTime }}<span class="text-base px-1">分鐘</span></p>
+
+                <p
+                  class="text-left text-black text-2xl font-bold Sfpro"
+                  v-if="parseInt(bus.EstimateTime) >= 10"
+                >
+                  {{ bus.EstimateTime }}<span class="text-base px-1"></span>
+                </p>
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-else>
+                  {{ bus.EstimateTime }}<span class="text-base px-1"></span>
+                </p>
                 <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
               </div>
+
+              <!-- 這邊快被API氣死，有時StopSatus有問題，有時EstimateTime有問題 -->
               <div v-if="bus.StopStatus != 0">
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">{{ bus.EstimateTime }}<span class="text-base px-1"></span></p>
+                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">
+                  {{ bus.EstimateTime }}<span class="text-base px-1"></span>
+                </p>
               </div>
             </div>
           </div>
         </Slide>
       </Carousel>
-      <button @click="ss = !ss" style="z-index: 9999">開關</button>
-      <Route :chooseBusCard="chooseBusCard" :ss="ss" />
+      <Route :chooseBusCard="chooseBusCard" :ss="ss" @update="selfUpdate" />
     </div>
   </div>
 </template>
@@ -87,33 +110,45 @@ export default defineComponent({
     },
     breakpoints: {
       // 700px and up
-      700: {
-        itemsToShow: 4,
-        snapAlign: "center"
+      600: {
+        itemsToShow: 3,
+        snapAlign: "start"
       },
       // 1024 and up
+      800: {
+        itemsToShow: 4,
+        snapAlign: "start"
+      },
       1024: {
-        itemsToShow: 8,
-        snapAlign: "center"
+        itemsToShow: 5,
+        snapAlign: "start"
+      },
+      1200: {
+        itemsToShow: 6,
+        snapAlign: "start"
+      },
+      1400: {
+        itemsToShow: 7,
+        snapAlign: "start"
+      },
+      1600: {
+        itemsToShow: 2,
+        snapAlign: "start"
       }
     },
     realtime: [],
     chooseBusCard: "18"
   }),
   created() {
-    this.getBusRealTime();
     this.timer = setInterval(this.getBusRealTime(), 30000);
   },
   mounted() {
     this.init();
-    this.getallBusName();
   },
   methods: {
     busCardhandle(bus) {
       this.chooseBusCard = bus.RouteName.Zh_tw;
-      console.log("巴士卡", this.chooseBusCard);
-      this.ss = false;
-      this.ss = true;
+      this.ss = !this.ss;
     },
     init() {
       this.hammer = new Hammer(this.$refs.gesture);
@@ -126,7 +161,6 @@ export default defineComponent({
       });
     },
     getBusRealTime() {
-      console.log("選擇站點ID", this.choiceItem.StationID);
       this.axios({
         method: "get",
         url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceItem.StationID}?$format=JSON`,
@@ -135,10 +169,18 @@ export default defineComponent({
         .then((response) => {
           this.realtime = response.data;
           this.getBusDestination();
-          console.log("站點預估到達資訊", this.realtime);
+          // 字卡剩餘時間時間排序
+          this.realtime.sort(function (a, b) {
+            return b.EstimateTime - a.EstimateTime;
+          });
+          this.realtime.forEach((item, i) => {
+            if (item.name === "進站中") {
+              this.realtime.splice(i, 1);
+              this.realtime.unshift(item);
+            }
+          });
         })
         .catch((error) => console.log("error", error));
-      return;
     },
     getBusDestination() {
       this.realtime.forEach((item) => {
@@ -149,47 +191,39 @@ export default defineComponent({
           headers: Myapi.getAuthorizationHeader()
         })
           .then((response) => {
-            console.log("取得路線資訊", response.data);
-
-            // response.data[0]['SubRoutes'].forEach((item) => {
-
             if (item.Direction == 1) item["endstop"] = response.data[0].DepartureStopNameZh;
             else if (item.Direction == 0) item["endstop"] = response.data[0].DestinationStopNameZh;
+
             // StopStatus (Int32, optional): 車輛狀態備註 : [0:'正常',1:'尚未發車',2:'交管不停靠',3:'末班車已過',4:'今日未營運'] ,
-            if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
+
+            if (item["EstimateTime"] > 60) {
+              //分鐘
+              let t = Math.floor(item["EstimateTime"] / 60).toString();
+              if (t < 10) {
+                t = "0" + t;
+              }
+              item["EstimateTime"] = t + "分鐘";
+            } else if (item["EstimateTime"] < 60) item["EstimateTime"] = "進站中";
+            else if (item.StopStatus == 1) item["EstimateTime"] = "尚未發車";
             else if (item.StopStatus == 2) item["EstimateTime"] = "交管不停靠";
             else if (item.StopStatus == 3) item["EstimateTime"] = "末班車已過";
             else if (item.StopStatus == 4) item["EstimateTime"] = "今日未營運";
-            else {
-              if (item["EstimateTime"] < 60) return;
-              let t = Math.floor(item["EstimateTime"] / 60);
-              if (t < 10) {
-                t = "0" + t.toString();
-              }
-              item["EstimateTime"] = t;
-            }
           })
           .catch((error) => console.log("error", error));
       });
     },
-    getallBusName() {
-      this.axios({
-        method: "get",
-        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/Stop/City/Taipei?$format=JSON`,
-        headers: Myapi.getAuthorizationHeader()
-      }).then((response) => {
-        let data = response.data;
-        let maxname = 0;
-        let temp = "";
-        data.forEach((item) => {
-          if (item["StopName"]["Zh_tw"].length > maxname) {
-            // console.log("yoooooo", item["StopName"]["Zh_tw"].length);
-            maxname = item["StopName"]["Zh_tw"].length;
-            temp = item["StopName"]["Zh_tw"];
-          }
-        });
-        console.log("最長的名字", maxname, temp);
-      });
+    selfUpdate(val) {
+      this.ss = val;
+    },
+    sortOrder(prop) {
+      return function (a, b) {
+        if (a[prop] > b[prop]) {
+          return 1;
+        } else if (a[prop] < b[prop]) {
+          return -1;
+        }
+        return 0;
+      };
     }
   },
   watch: {
@@ -239,5 +273,21 @@ export default defineComponent({
 
 .Sfpro {
   font-family: "SF Pro", "PinfFang TC";
+}
+
+@media screen and (min-width: 1200px) {
+  #infoCard {
+    position: absolute;
+    top: 0px;
+    z-index: 1001;
+    background: #fff;
+    box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    padding: 18px 24px;
+    width: 500px;
+    margin: 20px 0 50px 50px;
+    box-sizing: border-box;
+    transition: bottom 0.5s, width 0.5s;
+  }
 }
 </style>
