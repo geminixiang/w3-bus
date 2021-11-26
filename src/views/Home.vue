@@ -23,7 +23,7 @@ export default {
       busData: null,
       busIcon: leaflet.icon({
         iconUrl: require("@/assets/busIcon.svg"),
-        iconSize: [23, 23],
+        iconSize: [32, 32],
         iconAnchor: [13, 24],
         popupAnchor: [-3, -76]
       }),
