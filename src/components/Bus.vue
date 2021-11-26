@@ -41,7 +41,8 @@
         <p class="text-sm">路線</p>
       </div>
       <hr class="pt-4 mt-4" />
-      <h1 class="font-bold text-base pb-3">即將抵達本站公車</h1>
+      <h1 class="font-bold text-lg pb-3 inline-block">即將抵達本站公車</h1>
+      <span class="float-right px-3">於{{ timer }}秒前更新</span>
 
       <Carousel :settings="settings" :breakpoints="breakpoints">
         <Slide v-for="bus in realtime" :key="bus" v-on:dblclick="busCardhandle(bus)">
@@ -76,7 +77,13 @@
           </div>
         </Slide>
       </Carousel>
+      <h1 class="font-bold text-base text-center speech-bubble">
+        請點擊兩下，立即獲得更多公車動態資訊！
+      </h1>
       <Route :chooseBusCard="chooseBusCard" :ss="ss" @update="selfUpdate" />
+    </div>
+    <div v-else>
+      <h1 class="font-bold text-2xl title">點擊站牌</h1>
     </div>
   </div>
 </template>
@@ -101,7 +108,7 @@ export default defineComponent({
   data: () => ({
     hammer: null,
     ss: false,
-    timer: "",
+    timer: 0,
     // carousel settings
     settings: {
       itemsToShow: 2,
@@ -132,12 +139,16 @@ export default defineComponent({
     chooseBusCard: "18"
   }),
   created() {
-    this.timer = setInterval(this.getBusRealTime(), 30000);
+    // this.timer = setInterval(this.getBusRealTime(), 30000);
+    this.timer = setInterval(this.countup, 1000);
   },
   mounted() {
     this.init();
   },
   methods: {
+    countup() {
+      this.timer++;
+    },
     busCardhandle(bus) {
       this.chooseBusCard = bus.RouteName.Zh_tw;
       this.ss = !this.ss;
@@ -146,6 +157,11 @@ export default defineComponent({
       this.hammer = new Hammer(this.$refs.gesture);
       // 需識別事件
       this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_VERTICAL });
+
+      this.hammer.on("swipeup", () => {
+        var card = document.getElementById("infoCard");
+        card.style.bottom = "0";
+      });
 
       this.hammer.on("swipedown", () => {
         var card = document.getElementById("infoCard");
@@ -221,8 +237,15 @@ export default defineComponent({
   watch: {
     choiceItem: function () {
       this.getBusRealTime();
+      this.timer = 0;
       var card = document.getElementById("infoCard");
       card.style.bottom = "0px";
+    },
+    timer: function () {
+      if (this.timer >= 30) {
+        this.timer = 0;
+        this.getBusRealTime();
+      }
     }
   }
 });
@@ -241,6 +264,7 @@ export default defineComponent({
   position: absolute;
   bottom: -450px;
   z-index: 1001;
+  background: #fff;
   box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
   border-radius: 20px 20px 0px 0px;
   padding: 18px 24px;
@@ -263,6 +287,19 @@ export default defineComponent({
 
 .Sfpro {
   font-family: "SF Pro", "PinfFang TC";
+}
+
+/* speech bubble */
+.speech-bubble {
+  position: relative;
+  border-radius: 0 30px 30px 30px;
+  padding: 9px;
+  width: 63%;
+  margin-top: 10px;
+  margin-left: 45px;
+  box-shadow: 2px 5px 18px -3px rgb(0 0 0 / 10%);
+  border: 2px solid #e8e8e8;
+  color: #535353;
 }
 
 @media screen and (min-width: 1200px) {
@@ -293,6 +330,9 @@ export default defineComponent({
   }
   .text-red-500 {
     color: rgba(239, 68, 68, var(--tw-text-opacity));
+  }
+  .speech-bubble {
+    background: #bdc1c6;
   }
 }
 </style>
