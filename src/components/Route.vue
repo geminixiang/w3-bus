@@ -300,4 +300,30 @@ export default {
     transition: bottom 0.5s, width 0.5s;
   }
 }
+
+@media screen and (max-width: 500px) {
+  .navbar-brand {
+    width: 75%;
+  }
+  .tab button {
+    font-size: 16px;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  #router {
+    background: #202124;
+  }
+  .carousel__item {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .text-red-500 {
+    color: rgba(239, 68, 68, var(--tw-text-opacity));
+  }
+  .BusData {
+    border-right: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .navbar-update img {
+    filter: contrast(0);
+  }
+}
 </style>

@@ -249,7 +249,6 @@ export default defineComponent({
   position: absolute;
   bottom: -450px;
   z-index: 1001;
-  background: #fff;
   box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
   border-radius: 20px 20px 0px 0px;
   padding: 18px 24px;
@@ -267,7 +266,6 @@ export default defineComponent({
 }
 
 .carousel__slide {
-  background: #fff;
   height: 200px;
 }
 
@@ -278,16 +276,31 @@ export default defineComponent({
 @media screen and (min-width: 1200px) {
   #infoCard {
     position: absolute;
-    top: 0px;
-    z-index: 1001;
+    bottom: -450px;
     background: #fff;
     box-shadow: 0px 0px 14px 4px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
     padding: 18px 24px;
     width: 500px;
-    margin: 20px 0 50px 50px;
+    height: 500px;
+    margin: 0px 0 50px 50px;
     box-sizing: border-box;
     transition: bottom 0.5s, width 0.5s;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  * {
+    color: #bdc1c6;
+  }
+  #infoCard {
+    background: #202124;
+  }
+  .carousel__item {
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .text-red-500 {
+    color: rgba(239, 68, 68, var(--tw-text-opacity));
   }
 }
 </style>
