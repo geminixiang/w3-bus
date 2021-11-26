@@ -45,7 +45,7 @@
       <span class="float-right px-3">於{{ timer }}秒前更新</span>
 
       <Carousel :settings="settings" :breakpoints="breakpoints">
-        <Slide v-for="bus in realtime" :key="bus" v-on:dblclick="busCardhandle(bus)">
+        <Slide v-for="bus in realtime" :key="bus" v-on:click="busCardhandle(bus)">
           <div class="carousel__item rounded-2xl" v-if="realtime">
             <div class="p-3 text-left">
               <i class="fas fa-bus font-bold mr-1"></i>
@@ -77,8 +77,8 @@
           </div>
         </Slide>
       </Carousel>
-      <h1 class="font-bold text-base text-center speech-bubble">
-        請點擊兩下，立即獲得更多公車動態資訊！
+      <h1 class="font-bold text-base text-center speech-bubble" id="snackbar">
+        請點擊，立即獲得更多公車動態資訊！
       </h1>
       <Route :chooseBusCard="chooseBusCard" :ss="ss" @update="selfUpdate" />
     </div>
@@ -139,7 +139,6 @@ export default defineComponent({
     chooseBusCard: "18"
   }),
   created() {
-    // this.timer = setInterval(this.getBusRealTime(), 30000);
     this.timer = setInterval(this.countup, 1000);
   },
   mounted() {
@@ -300,6 +299,56 @@ export default defineComponent({
   box-shadow: 2px 5px 18px -3px rgb(0 0 0 / 10%);
   border: 2px solid #e8e8e8;
   color: #535353;
+}
+
+.speech-bubble.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@-webkit-keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
 }
 
 @media screen and (min-width: 1200px) {
