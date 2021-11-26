@@ -124,14 +124,6 @@ export default defineComponent({
         snapAlign: "start"
       },
       1200: {
-        itemsToShow: 6,
-        snapAlign: "start"
-      },
-      1400: {
-        itemsToShow: 7,
-        snapAlign: "start"
-      },
-      1600: {
         itemsToShow: 2,
         snapAlign: "start"
       }
