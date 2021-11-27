@@ -80,7 +80,13 @@
       <h1 class="font-bold text-base text-center speech-bubble" id="snackbar">
         請點擊，立即獲得更多公車動態資訊！
       </h1>
-      <Route :chooseBusCard="chooseBusCard" :ss="ss" @update="selfUpdate" />
+      <Route
+        :chooseBusCard="chooseBusCard"
+        :routeSwitch="routeSwitch"
+        :userStop="choiceItem.StopName.Zh_tw"
+        :cardStartEnd="cardStartEnd"
+        @update="selfUpdate"
+      />
     </div>
     <div v-else>
       <h1 class="font-bold text-2xl title">點擊站牌</h1>
@@ -107,7 +113,8 @@ export default defineComponent({
   },
   data: () => ({
     hammer: null,
-    ss: false,
+    cardStartEnd: ["ENDSTOP", "STARTSTOP"],
+    routeSwitch: false,
     timer: 0,
     // carousel settings
     settings: {
@@ -150,7 +157,12 @@ export default defineComponent({
     },
     busCardhandle(bus) {
       this.chooseBusCard = bus.RouteName.Zh_tw;
-      this.ss = !this.ss;
+      if (bus.Direction == 0) {
+        this.cardStartEnd = [bus.endstop, bus.startstop];
+      } else {
+        this.cardStartEnd = [bus.startstop, bus.endstop];
+      }
+      this.routeSwitch = !this.routeSwitch;
     },
     init() {
       this.hammer = new Hammer(this.$refs.gesture);
@@ -198,8 +210,14 @@ export default defineComponent({
           headers: Myapi.getAuthorizationHeader()
         })
           .then((response) => {
-            if (item.Direction == 1) item["endstop"] = response.data[0].DepartureStopNameZh;
-            else if (item.Direction == 0) item["endstop"] = response.data[0].DestinationStopNameZh;
+            // Direction [0:'去程',1:'返程',2:'迴圈',255:'未知']
+            if (item.Direction == 1) {
+              item["startstop"] = response.data[0].DestinationStopNameZh;
+              item["endstop"] = response.data[0].DepartureStopNameZh;
+            } else if (item.Direction == 0) {
+              item["startstop"] = response.data[0].DepartureStopNameZh;
+              item["endstop"] = response.data[0].DestinationStopNameZh;
+            }
 
             // StopStatus (Int32, optional): 車輛狀態備註 : [0:'正常',1:'尚未發車',2:'交管不停靠',3:'末班車已過',4:'今日未營運'] ,
 
@@ -220,7 +238,7 @@ export default defineComponent({
       });
     },
     selfUpdate(val) {
-      this.ss = val;
+      this.routeSwitch = val;
     },
     sortOrder(prop) {
       return function (a, b) {
@@ -236,6 +254,7 @@ export default defineComponent({
   watch: {
     choiceItem: function () {
       this.getBusRealTime();
+      this.routeSwitch = false;
       this.timer = 0;
       var card = document.getElementById("infoCard");
       card.style.bottom = "0px";
@@ -367,7 +386,7 @@ export default defineComponent({
   }
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   * {
     color: #bdc1c6;
   }
@@ -383,5 +402,5 @@ export default defineComponent({
   .speech-bubble {
     background: #bdc1c6;
   }
-}
+} */
 </style>
