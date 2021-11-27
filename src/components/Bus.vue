@@ -56,12 +56,12 @@
                 <p class="mt-4">再過</p>
 
                 <p
-                  class="text-left text-black text-2xl font-bold Sfpro"
+                  class="text-left text-black text-2xl font-bold"
                   v-if="parseInt(bus.EstimateTime) >= 10"
                 >
                   {{ bus.EstimateTime }}<span class="text-base px-1"></span>
                 </p>
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro" v-else>
+                <p class="text-left text-red-500 text-2xl font-bold" v-else>
                   {{ bus.EstimateTime }}<span class="text-base px-1"></span>
                 </p>
                 <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
@@ -69,7 +69,7 @@
 
               <!-- 這邊快被API氣死，有時StopSatus有問題，有時EstimateTime有問題 -->
               <div v-if="bus.StopStatus != 0">
-                <p class="text-left text-red-500 text-2xl font-bold Sfpro mt-8">
+                <p class="text-left text-red-500 text-2xl font-bold mt-8">
                   {{ bus.EstimateTime }}<span class="text-base px-1"></span>
                 </p>
               </div>
@@ -98,7 +98,7 @@
 import { defineComponent } from "vue";
 import { Carousel, Slide } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
-import Route from "../components/Route.vue";
+import Route from "@/components/Route.vue";
 import Myapi from "@/models/Myapi";
 
 import Hammer from "hammerjs";
@@ -270,10 +270,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@font-face {
-  font-family: "SF Pro";
-  src: url("~@/assets/SF-Pro.ttf");
-}
 .title {
   width: 70%;
   height: 32px;
@@ -301,10 +297,6 @@ export default defineComponent({
 
 .carousel__slide {
   height: 200px;
-}
-
-.Sfpro {
-  font-family: "SF Pro", "PinfFang TC";
 }
 
 /* speech bubble */

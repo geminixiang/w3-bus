@@ -8,7 +8,7 @@
 <script>
 import leaflet from "leaflet";
 import "leaflet.locatecontrol";
-import Bus from "../components/Bus.vue";
+import Bus from "@/components/Bus.vue";
 import Myapi from "@/models/Myapi";
 
 export default {
