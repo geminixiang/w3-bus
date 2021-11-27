@@ -140,8 +140,8 @@ export default {
             }
           });
 
-          this.sortJSONData(this.goEstimatedTime, 0);
-          this.sortJSONData(this.backEstimatedTime, 1);
+          if (this.goEstimatedTime) this.sortJSONData(this.goEstimatedTime, 0);
+          if (this.backEstimatedTime) this.sortJSONData(this.backEstimatedTime, 1);
         })
         .catch((error) => console.log("error", error));
     },
