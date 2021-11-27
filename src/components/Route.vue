@@ -369,13 +369,13 @@ export default {
 
 @media screen and (max-width: 500px) {
   .navbar-brand {
-    width: 75%;
+    width: 57%;
   }
   .tab button {
     font-size: 16px;
   }
 }
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   #router {
     background: #202124;
   }
@@ -394,5 +394,5 @@ export default {
   #userHere {
     background: linear-gradient(to right, #00000000, #fff8ec36, #00000000);
   }
-} */
+}
 </style>
