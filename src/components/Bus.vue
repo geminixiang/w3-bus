@@ -1,8 +1,8 @@
 <template>
   <div id="infoCard" ref="gesture">
-    <div class="info" v-if="choiceItem">
-      <h1 class="font-bold text-2xl title">{{ choiceItem.StopName.Zh_tw || "NULL" }}</h1>
-      <p class="text-base text-gray-800 title">{{ choiceItem.StopAddress }}</p>
+    <div class="info" v-if="choiceStop">
+      <h1 class="font-bold text-2xl title">{{ choiceStop.StopName.Zh_tw || "NULL" }}</h1>
+      <p class="text-base text-gray-800 title">{{ choiceStop.StopAddress }}</p>
       <div class="absolute right-10 top-6 text-center">
         <svg class="text-2xl" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -64,7 +64,7 @@
                 <p class="text-left text-red-500 text-2xl font-bold" v-else>
                   {{ bus.EstimateTime }}<span class="text-base px-1"></span>
                 </p>
-                <p class="text-left">即抵達{{ choiceItem.StopName.Zh_tw || "NULL" }}</p>
+                <p class="text-left">即抵達{{ choiceStop.StopName.Zh_tw || "NULL" }}</p>
               </div>
 
               <!-- 這邊快被API氣死，有時StopSatus有問題，有時EstimateTime有問題 -->
@@ -81,11 +81,11 @@
         請點擊，立即獲得更多公車動態資訊！
       </h1>
       <Route
-        :chooseBusCard="chooseBusCard"
-        :routeSwitch="routeSwitch"
-        :userStop="choiceItem.StopName.Zh_tw"
+        :choiceBusCard="choiceBusCard"
+        :toggleRouteCard="toggleRouteCard"
+        :userStop="choiceStop.StopName.Zh_tw"
         :cardStartEnd="cardStartEnd"
-        @update="selfUpdate"
+        @toggleRouteCardUpdate="toggleRouteCardUpdate"
       />
     </div>
     <div v-else>
@@ -105,7 +105,7 @@ import Hammer from "hammerjs";
 
 export default defineComponent({
   name: "Bus",
-  props: ["choiceItem"],
+  props: ["choiceStop", "toggleStopCard"],
   components: {
     Carousel,
     Slide,
@@ -114,7 +114,7 @@ export default defineComponent({
   data: () => ({
     hammer: null,
     cardStartEnd: ["ENDSTOP", "STARTSTOP"],
-    routeSwitch: false,
+    toggleRouteCard: false,
     timer: 0,
     // carousel settings
     settings: {
@@ -143,7 +143,7 @@ export default defineComponent({
       }
     },
     realtime: [],
-    chooseBusCard: "18"
+    choiceBusCard: "18"
   }),
   created() {
     this.timer = setInterval(this.countup, 1000);
@@ -156,13 +156,18 @@ export default defineComponent({
       this.timer++;
     },
     busCardhandle(bus) {
-      this.chooseBusCard = bus.RouteName.Zh_tw;
+      this.choiceBusCard = bus.RouteName.Zh_tw;
       if (bus.Direction == 0) {
         this.cardStartEnd = [bus.endstop, bus.startstop];
       } else {
         this.cardStartEnd = [bus.startstop, bus.endstop];
       }
-      this.routeSwitch = !this.routeSwitch;
+      this.toggleRouteCard = !this.toggleRouteCard;
+    },
+    close() {
+      var card = document.getElementById("infoCard");
+      card.style.bottom = "-450px";
+      this.$emit("toggleStopCardUpdate", false);
     },
     init() {
       this.hammer = new Hammer(this.$refs.gesture);
@@ -174,15 +179,12 @@ export default defineComponent({
         card.style.bottom = "0";
       });
 
-      this.hammer.on("swipedown", () => {
-        var card = document.getElementById("infoCard");
-        card.style.bottom = "-450px";
-      });
+      this.hammer.on("swipedown", this.close);
     },
     getBusRealTime() {
       this.axios({
         method: "get",
-        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceItem.StationID}?$format=JSON`,
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/PassThrough/Station/${this.choiceStop.StationID}?$format=JSON`,
         headers: Myapi.getAuthorizationHeader()
       })
         .then((response) => {
@@ -237,8 +239,8 @@ export default defineComponent({
           .catch((error) => console.log("error", error));
       });
     },
-    selfUpdate(val) {
-      this.routeSwitch = val;
+    toggleRouteCardUpdate(val) {
+      this.toggleRouteCard = val;
     },
     sortOrder(prop) {
       return function (a, b) {
@@ -252,12 +254,21 @@ export default defineComponent({
     }
   },
   watch: {
-    choiceItem: function () {
+    choiceStop: function () {
+      // 換站點，卡片開啟
+      this.$emit("toggleStopCardUpdate", true);
+
       this.getBusRealTime();
-      this.routeSwitch = false;
+      this.toggleRouteCard = false;
       this.timer = 0;
+    },
+    toggleStopCard: function () {
       var card = document.getElementById("infoCard");
-      card.style.bottom = "0px";
+      if (this.toggleStopCard) {
+        card.style.bottom = "0";
+      } else {
+        card.style.bottom = "-450px";
+      }
     },
     timer: function () {
       if (this.timer >= 30) {

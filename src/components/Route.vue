@@ -3,8 +3,10 @@
     <div>
       <nav class="navbar">
         <i class="fas fa-arrow-left" @click="close"></i>
-        <p class="navbar-brand" href="#">{{ chooseBusCard }}</p>
-        <p class="navbar-update"><img src="@/assets/update.svg" />更新{{ timer }}</p>
+        <p class="navbar-brand" href="#">{{ choiceBusCard }}</p>
+        <p class="navbar-update" @click="updateRouteDate">
+          <img id="navbar-update-img" src="@/assets/update.svg" />更新{{ timer }}
+        </p>
       </nav>
 
       <div class="tab" v-if="goEstimatedTime[0]">
@@ -62,7 +64,7 @@ import Myapi from "@/models/Myapi";
 import Hammer from "hammerjs";
 
 export default {
-  props: ["chooseBusCard", "routeSwitch", "userStop", "cardStartEnd"],
+  props: ["choiceBusCard", "toggleRouteCard", "userStop", "cardStartEnd"],
   data() {
     return {
       hammer: null,
@@ -86,24 +88,29 @@ export default {
     close() {
       var card = document.getElementById("router");
       card.style.display = "none";
-      this.$emit("update", false);
+      this.$emit("toggleRouteCardUpdate", false);
     },
     init() {
       this.hammer = new Hammer(this.$refs.routerCard);
-
       this.hammer.get("swipe").set({ direction: Hammer.DIRECTION_HORIZONTAL });
-
-      this.hammer.on("swiperight", () => {
-        var card = document.getElementById("router");
-        card.style.display = "none";
-        this.$emit("update", false);
-      });
+      this.hammer.on("swiperight", this.close);
+    },
+    updateRouteDate() {
+      if (this.timer > 5) {
+        var img = document.getElementById("navbar-update-img");
+        img.className += " rotated-image";
+        setTimeout(function () {
+          img.className = img.className.replace(" rotated-image", "");
+        }, 1000);
+        this.getEstimatedTimeOfArrival();
+        this.timer = 0;
+      }
     },
     getStopSequence() {
       this.stopSequence = [];
       this.axios({
         method: "get",
-        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/Taipei/${this.chooseBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.chooseBusCard}'&$format=JSON`,
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/StopOfRoute/City/Taipei/${this.choiceBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.choiceBusCard}'&$format=JSON`,
         headers: Myapi.getAuthorizationHeader()
       })
         .then((response) => {
@@ -124,7 +131,7 @@ export default {
     getEstimatedTimeOfArrival() {
       this.axios({
         method: "get",
-        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/${this.chooseBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.chooseBusCard}'&$format=JSON`,
+        url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/${this.choiceBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.choiceBusCard}'&$format=JSON`,
         headers: Myapi.getAuthorizationHeader()
       })
         .then((response) => {
@@ -145,11 +152,12 @@ export default {
         })
         .catch((error) => console.log("error", error));
     },
-    sortJSONData(prop, i) {
+    sortJSONData(data, i) {
       let x, y;
       var that = this;
+      console.log(data);
 
-      return prop.sort(function (a, b) {
+      return data.sort(function (a, b) {
         x = that.stopSequence[i][0].indexOf(a["StopUID"]);
         y = that.stopSequence[i][0].indexOf(b["StopUID"]);
 
@@ -188,11 +196,14 @@ export default {
     }
   },
   watch: {
-    routeSwitch: function () {
+    choiceBusCard: function () {
+      this.getStopSequence();
+      this.getEstimatedTimeOfArrival();
+      this.timer = 0;
+    },
+    toggleRouteCard: function () {
       var card = document.getElementById("router");
-      if (this.routeSwitch == true) {
-        this.getStopSequence();
-        this.getEstimatedTimeOfArrival();
+      if (this.toggleRouteCard == true) {
         card.style.display = "block";
       } else {
         card.style.display = "none";
@@ -322,11 +333,19 @@ export default {
   display: inline-block;
   font-size: 18px;
 }
+.navbar-update {
+  cursor: pointer;
+}
 .fa-arrow-left {
   vertical-align: middle;
   font-size: 25px;
   margin-right: 15px;
   cursor: pointer;
+}
+.rotated-image {
+  transition-duration: 1s;
+  -webkit-transform: rotate(359deg);
+  transform: rotate(359deg);
 }
 /* bar */
 .tab {

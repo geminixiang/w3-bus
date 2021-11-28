@@ -1,7 +1,11 @@
 <template>
   <div class="flex flex-col h-screen max-h-screen">
     <div id="map" class="h-full"></div>
-    <Bus :choiceItem="choiceItem" />
+    <Bus
+      :choiceStop="choiceStop"
+      :toggleStopCard="toggleStopCard"
+      @toggleStopCardUpdate="toggleStopCardUpdate"
+    />
   </div>
 </template>
 
@@ -16,7 +20,8 @@ export default {
   components: { Bus },
   data() {
     return {
-      choiceItem: "",
+      choiceStop: "",
+      toggleStopCard: false,
       geo: [25.045, 121.536],
       mymap: null,
       gettingLocation: null,
@@ -135,9 +140,13 @@ export default {
           })
           .addTo(this.mymap)
           .on("click", function () {
-            that.choiceItem = item;
+            that.choiceStop = item;
+            that.toggleStopCard = !that.toggleStopCard;
           });
       });
+    },
+    toggleStopCardUpdate(val) {
+      this.toggleStopCard = val;
     }
   }
 };
