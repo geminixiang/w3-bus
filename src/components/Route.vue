@@ -2,10 +2,10 @@
   <div id="router" ref="routerCard">
     <div>
       <nav class="navbar">
-        <i class="fas fa-arrow-left" @click="close"></i>
+        <i class="fas fa-chevron-left" @click="close"></i>
         <p class="navbar-brand" href="#">{{ choiceBusCard }}</p>
         <p class="navbar-update" @click="updateRouteDate">
-          <img id="navbar-update-img" src="@/assets/update.svg" />更新{{ timer }}
+          <img id="navbar-update-img" src="@/assets/update.svg" />於{{ timer }}秒前更新
         </p>
       </nav>
 
@@ -35,6 +35,9 @@
               >
                 {{ ett.EstimateTime }}</span
               >
+              <span :class="[ett.EstimateTime === '進站中' ? 'absolute right-6' : 'hidden']"
+                ><img src="@/assets/busHere.svg"
+              /></span>
             </p>
             <p class="time" v-else>尚未發車</p>
             <p class="stopname">
@@ -45,12 +48,42 @@
         <div class="line"></div>
       </div>
 
-      <div class="row" id="back" style="display: none">
+      <!-- <div class="row" id="back" style="display: none">
         <div class="BusData" v-if="backEstimatedTime">
           <div class="busroute" v-for="ett in backEstimatedTime" :key="ett">
             <p class="time" v-if="ett.EstimateTime">{{ ett.EstimateTime }}</p>
             <p class="time" v-else>尚未發車</p>
             <p class="stopname">{{ ett.StopName.Zh_tw }}</p>
+          </div>
+        </div>
+        <div class="line"></div>
+      </div> -->
+
+      <div class="row" id="back" style="display: none">
+        <div class="BusData" v-if="backEstimatedTime">
+          <div
+            class="busroute"
+            v-for="ett in backEstimatedTime"
+            :key="ett"
+            :id="[ett.StopName.Zh_tw === userStop ? 'userHere' : '']"
+          >
+            <p class="time" v-if="ett.EstimateTime">
+              <span
+                :class="[
+                  ett.EstimateTime === '進站中' ? 'busArrive' : '',
+                  parseInt(ett.EstimateTime) < 3 ? 'busComing' : ''
+                ]"
+              >
+                {{ ett.EstimateTime }}</span
+              >
+              <span :class="[ett.EstimateTime === '進站中' ? 'absolute right-6' : 'hidden']"
+                ><img src="@/assets/busHere.svg"
+              /></span>
+            </p>
+            <p class="time" v-else>尚未發車</p>
+            <p class="stopname">
+              {{ ett.StopName.Zh_tw }}
+            </p>
           </div>
         </div>
         <div class="line"></div>
@@ -129,6 +162,8 @@ export default {
         .catch((error) => console.log("error", error));
     },
     getEstimatedTimeOfArrival() {
+      this.goEstimatedTime = [];
+      this.backEstimatedTime = [];
       this.axios({
         method: "get",
         url: `https://ptx.transportdata.tw/MOTC/v2/Bus/EstimatedTimeOfArrival/City/Taipei/${this.choiceBusCard}?$filter=RouteName%2FZh_tw%20eq%20'${this.choiceBusCard}'&$format=JSON`,
@@ -137,8 +172,6 @@ export default {
         .then((response) => {
           let data = this.fixTime(response.data);
 
-          this.goEstimatedTime = [];
-          this.backEstimatedTime = [];
           data.forEach((item) => {
             if (item.Direction == 0) {
               this.goEstimatedTime.push(item);
@@ -155,7 +188,6 @@ export default {
     sortJSONData(data, i) {
       let x, y;
       var that = this;
-      console.log(data);
 
       return data.sort(function (a, b) {
         x = that.stopSequence[i][0].indexOf(a["StopUID"]);
@@ -282,7 +314,7 @@ export default {
   color: #ff4a55;
 }
 #userHere {
-  background: linear-gradient(to right, #fff8ec30, #fff8ec, #fff8ec00);
+  background: linear-gradient(to right, #fff8ec30 0%, #fff8ec 20%, #fff8ec 90%, #fff8ec00 100%);
 }
 
 #userHere::before {
@@ -317,15 +349,16 @@ export default {
   box-shadow: 0px 0px 14px 4px rgb(0 0 0 / 10%);
   height: 85px;
   line-height: 85px;
-  padding: 0 35px;
+  padding: 0 15px 0 35px;
   max-width: 500px;
 }
 .navbar-brand {
   font-size: 35px;
   font-weight: 700;
-  width: 70%;
+  width: 60%;
   display: inline-block;
   vertical-align: middle;
+  overflow: hidden;
 }
 .navbar-update,
 .navbar-update img {
@@ -336,7 +369,7 @@ export default {
 .navbar-update {
   cursor: pointer;
 }
-.fa-arrow-left {
+.fa-chevron-left {
   vertical-align: middle;
   font-size: 25px;
   margin-right: 15px;
@@ -360,7 +393,7 @@ export default {
   border-radius: 100px;
 }
 .tab button:hover {
-  background: #fff8ec;
+  background: #ffeccc98;
 }
 
 .tab button.activate {
@@ -388,13 +421,13 @@ export default {
 
 @media screen and (max-width: 500px) {
   .navbar-brand {
-    width: 57%;
+    width: 45%;
   }
   .tab button {
     font-size: 16px;
   }
 }
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   #router {
     background: #202124;
   }
@@ -411,7 +444,7 @@ export default {
     filter: contrast(0);
   }
   #userHere {
-    background: linear-gradient(to right, #00000000, #fff8ec36, #00000000);
+    background: linear-gradient(to right, #00000000 0%, #fff8ec36 20%, #fff8ec36 90%, #00000000 100%);
   }
-}
+} */
 </style>

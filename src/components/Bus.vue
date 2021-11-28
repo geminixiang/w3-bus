@@ -77,9 +77,14 @@
           </div>
         </Slide>
       </Carousel>
-      <h1 class="font-bold text-base text-center speech-bubble" id="snackbar">
-        請點擊，立即獲得更多公車動態資訊！
-      </h1>
+      <div
+        id="tipsModal"
+        class="fixed top-0 left-0 w-screen h-screen"
+        style=""
+        @click.once="closeModal"
+      >
+        <p class="bg-white absolute px-4 py-2 rounded-xl tip-content">請點擊，以取得更多公車資訊</p>
+      </div>
       <Route
         :choiceBusCard="choiceBusCard"
         :toggleRouteCard="toggleRouteCard"
@@ -89,14 +94,29 @@
       />
     </div>
     <div v-else>
-      <h1 class="font-bold text-2xl title">點擊站牌</h1>
+      <h1 class="font-bold text-2xl text-center guide">使用導覽</h1>
+      <div style="height: 100px"></div>
+      <Carousel :settings="settingsForGuide" :breakpoints="breakpointsForGuide">
+        <Slide v-for="guide in guideText" :key="guide.text">
+          <div
+            class="flex self-center justify-center items-center mt-12"
+            style="width: 100%; height: 100%"
+          >
+            <img class="block" style="max-height: 200px" :src="guide.img" />
+          </div>
+          <p class="block text-center mt-5 text-xl">{{ guide.text }}</p>
+        </Slide>
+        <template #addons>
+          <Pagination />
+        </template>
+      </Carousel>
     </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import { Carousel, Slide } from "vue3-carousel";
+import { Carousel, Slide, Pagination } from "vue3-carousel";
 import "vue3-carousel/dist/carousel.css";
 import Route from "@/components/Route.vue";
 import Myapi from "@/models/Myapi";
@@ -109,6 +129,7 @@ export default defineComponent({
   components: {
     Carousel,
     Slide,
+    Pagination,
     Route
   },
   data: () => ({
@@ -116,6 +137,17 @@ export default defineComponent({
     cardStartEnd: ["ENDSTOP", "STARTSTOP"],
     toggleRouteCard: false,
     timer: 0,
+    settingsForGuide: {
+      itemsToShow: 1,
+      snapAlign: "start",
+      transition: 150
+    },
+    breakpointsForGuide: {
+      600: {
+        itemsToShow: 1,
+        snapAlign: "start"
+      }
+    },
     // carousel settings
     settings: {
       itemsToShow: 2,
@@ -143,7 +175,17 @@ export default defineComponent({
       }
     },
     realtime: [],
-    choiceBusCard: "18"
+    choiceBusCard: "18",
+    guideText: [
+      {
+        img: require("@/assets/guide1.svg"),
+        text: "定位您的位置，為您找出附近站牌"
+      },
+      {
+        img: require("@/assets/guide2.svg"),
+        text: "點擊站牌資訊卡片，立即顯示更多公車動態資訊"
+      }
+    ]
   }),
   created() {
     this.timer = setInterval(this.countup, 1000);
@@ -152,6 +194,14 @@ export default defineComponent({
     this.init();
   },
   methods: {
+    closeModal() {
+      var modal = document.getElementById("tipsModal");
+
+      console.log("window click");
+      console.log(modal);
+
+      modal.style.display = "none";
+    },
     countup() {
       this.timer++;
     },
@@ -251,6 +301,10 @@ export default defineComponent({
         }
         return 0;
       };
+    },
+    closeTips() {
+      var modal = document.getElementById("tipsModal");
+      modal.style.display = "none";
     }
   },
   watch: {
@@ -304,73 +358,59 @@ export default defineComponent({
   height: 200px;
   width: 100%;
   box-shadow: 0px 0px 11.8048px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+.carousel__item:hover {
+  box-shadow: 0px 0px 11px rgba(0, 0, 0, 0.2);
 }
 
 .carousel__slide {
   height: 200px;
 }
 
-/* speech bubble */
-.speech-bubble {
-  position: relative;
-  border-radius: 0 30px 30px 30px;
-  padding: 9px;
-  width: 63%;
-  margin-top: 10px;
-  margin-left: 45px;
-  box-shadow: 2px 5px 18px -3px rgb(0 0 0 / 10%);
-  border: 2px solid #e8e8e8;
-  color: #535353;
+/* guide */
+
+.guide {
+  line-height: 96px;
+  height: 96px;
+  background: rgba(255, 168, 0, 0.2);
+  margin: -18px -24px;
+  border-radius: 20px 20px 0 0;
+}
+.carousel__pagination-button {
+  border-radius: 999em;
+  width: 10px;
+  height: 10px;
+}
+.carousel__pagination-button {
+  background-color: rgba(255, 168, 0, 0.2);
+}
+.carousel__pagination-button--active {
+  background-color: #ffa800 !important;
 }
 
-.speech-bubble.show {
-  visibility: visible;
-  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+/* tips modal */
+#tipsModal {
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+.tip-content {
+  left: 80px;
+  bottom: 230px;
 }
 
-@-webkit-keyframes fadein {
-  from {
-    bottom: 0;
-    opacity: 0;
-  }
-  to {
-    bottom: 30px;
-    opacity: 1;
-  }
-}
-
-@keyframes fadein {
-  from {
-    bottom: 0;
-    opacity: 0;
-  }
-  to {
-    bottom: 30px;
-    opacity: 1;
-  }
-}
-
-@-webkit-keyframes fadeout {
-  from {
-    bottom: 30px;
-    opacity: 1;
-  }
-  to {
-    bottom: 0;
-    opacity: 0;
-  }
-}
-
-@keyframes fadeout {
-  from {
-    bottom: 30px;
-    opacity: 1;
-  }
-  to {
-    bottom: 0;
-    opacity: 0;
-  }
+.tip-content:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 30%;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-top-color: white;
+  border-bottom: 0;
+  margin-left: -10px;
+  margin-bottom: -10px;
 }
 
 @media screen and (min-width: 1200px) {
@@ -387,9 +427,13 @@ export default defineComponent({
     box-sizing: border-box;
     transition: bottom 0.5s, width 0.5s;
   }
+  .tip-content {
+    left: 165px;
+    bottom: 410px;
+  }
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   * {
     color: #bdc1c6;
   }
@@ -405,5 +449,5 @@ export default defineComponent({
   .speech-bubble {
     background: #bdc1c6;
   }
-}
+} */
 </style>
