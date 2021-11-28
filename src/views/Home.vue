@@ -82,22 +82,26 @@ export default {
         )
         .addTo(this.mymap);
 
-      leaflet.control
-        .locate({
-          position: "bottomright",
-          icon: "location",
-          drawCircle: false,
-          flyTo: true,
-          locateOptions: {
-            enableHighAccuracy: true
-          },
-          markerClass: leaflet.marker,
-          markerStyle: {
-            icon: this.userIcon
-          }
-        })
-        .addTo(this.mymap)
-        .start();
+      try {
+        leaflet.control
+          .locate({
+            position: "bottomright",
+            icon: "location",
+            drawCircle: false,
+            flyTo: true,
+            locateOptions: {
+              enableHighAccuracy: true
+            },
+            markerClass: leaflet.marker,
+            markerStyle: {
+              icon: this.userIcon
+            }
+          })
+          .addTo(this.mymap)
+          .start();
+      } catch (e) {
+        console.log("定位失敗", e);
+      }
     },
     getBusStopData(latitude, longitude) {
       if (this.busData) {
