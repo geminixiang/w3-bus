@@ -7,7 +7,7 @@ const routes = [
     name: "Home",
     component: Home,
     meta: {
-      title: "W3 公車"
+      title: "NearBus"
     }
   }
 ];

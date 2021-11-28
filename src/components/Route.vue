@@ -427,7 +427,7 @@ export default {
     font-size: 16px;
   }
 }
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   #router {
     background: #202124;
   }
@@ -444,7 +444,13 @@ export default {
     filter: contrast(0);
   }
   #userHere {
-    background: linear-gradient(to right, #00000000 0%, #fff8ec36 20%, #fff8ec36 90%, #00000000 100%);
+    background: linear-gradient(
+      to right,
+      #00000000 0%,
+      #fff8ec36 20%,
+      #fff8ec36 90%,
+      #00000000 100%
+    );
   }
-} */
+}
 </style>

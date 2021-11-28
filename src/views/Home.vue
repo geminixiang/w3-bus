@@ -1,4 +1,5 @@
 <template>
+  <img class="absolute w-32 mt-2 ml-2" style="z-index: 999" src="@/assets/Logo-full.svg" />
   <div class="flex flex-col h-screen max-h-screen">
     <div id="map" class="h-full"></div>
     <Bus

@@ -95,6 +95,7 @@
     </div>
     <div v-else>
       <h1 class="font-bold text-2xl text-center guide">使用導覽</h1>
+      <p class="text-sm text-center">(上滑顯示更多)</p>
       <div style="height: 100px"></div>
       <Carousel :settings="settingsForGuide" :breakpoints="breakpointsForGuide">
         <Slide v-for="guide in guideText" :key="guide.text">
@@ -371,8 +372,8 @@ export default defineComponent({
 /* guide */
 
 .guide {
-  line-height: 96px;
-  height: 96px;
+  line-height: 100px;
+  height: 100px;
   background: rgba(255, 168, 0, 0.2);
   margin: -18px -24px;
   border-radius: 20px 20px 0 0;
@@ -433,7 +434,7 @@ export default defineComponent({
   }
 }
 
-/* @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   * {
     color: #bdc1c6;
   }
@@ -449,5 +450,12 @@ export default defineComponent({
   .speech-bubble {
     background: #bdc1c6;
   }
-} */
+  .guide,
+  .tip-content {
+    background: rgb(88, 88, 88);
+  }
+  .tip-content:after {
+    border-top-color: rgb(88, 88, 88);
+  }
+}
 </style>
